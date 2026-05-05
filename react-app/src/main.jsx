@@ -1,14 +1,9 @@
 //! REACT WAY
 import { createRoot } from "react-dom/client";
-createRoot(document.getElementById("root")).render(
-  <>
-    <h1>Hello React</h1>
-    <h2>Hiii</h2>
-  </>,
-);
+import App from "./App";
+createRoot(document.getElementById("root")).render(<App />);
 
 //<></> --> Fragments
-
 //! JS WAY
 // const divTag = document.getElementById("root");
 // const h1tag = document.createElement("h1");
