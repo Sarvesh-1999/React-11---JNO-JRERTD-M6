@@ -4,7 +4,7 @@ const Child1 = (props) => {
 
   return (
     <>
-      <h1>Child Component</h1>
+      <h1>Child1 Component</h1>
       <p>{props.prop1}</p>
       <p>{props.prop2}</p>
       <p>{props.prop3.name}</p>

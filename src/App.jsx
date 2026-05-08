@@ -6,6 +6,7 @@ import StatesInCBC from "./allTopics/02_States/StatesInCBC";
 import StatesInFBC from "./allTopics/02_States/StatesInFBC";
 import ToggleComponent from "./allTopics/02_States/Toggle";
 import Parent1 from "./allTopics/03_Props/Parent1";
+import DrillingParent from "./allTopics/04_PropsDrilling/DrillingParent";
 
 const App = () => {
   return (
@@ -17,8 +18,8 @@ const App = () => {
       {/* <ToggleComponent /> */}
       {/* <CounterFBC /> */}
       {/* <StatesInCBC /> */}
-
-      <Parent1 />
+      {/* <Parent1 /> */}
+      <DrillingParent />
     </>
   );
 };
