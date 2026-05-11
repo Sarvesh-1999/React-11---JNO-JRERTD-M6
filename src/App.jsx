@@ -7,6 +7,9 @@ import StatesInFBC from "./allTopics/02_States/StatesInFBC";
 import ToggleComponent from "./allTopics/02_States/Toggle";
 import Parent1 from "./allTopics/03_Props/Parent1";
 import DrillingParent from "./allTopics/04_PropsDrilling/DrillingParent";
+import CallbackParent from "./allTopics/05_callbacks/CallbackParent";
+import UpliftingParent from "./allTopics/06_StateUplifting/UpliftingParent";
+import UserLists from "./allTopics/07_Lists/UserLists";
 
 const App = () => {
   return (
@@ -19,7 +22,10 @@ const App = () => {
       {/* <CounterFBC /> */}
       {/* <StatesInCBC /> */}
       {/* <Parent1 /> */}
-      <DrillingParent />
+      {/* <DrillingParent /> */}
+      {/* <CallbackParent /> */}
+      {/* <UpliftingParent /> */}
+      <UserLists/>
     </>
   );
 };
