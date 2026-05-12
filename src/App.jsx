@@ -10,6 +10,7 @@ import DrillingParent from "./allTopics/04_PropsDrilling/DrillingParent";
 import CallbackParent from "./allTopics/05_callbacks/CallbackParent";
 import UpliftingParent from "./allTopics/06_StateUplifting/UpliftingParent";
 import UserLists from "./allTopics/07_Lists/UserLists";
+import ControlledForms1 from "./allTopics/08_ControlledForms/ControlledForms1";
 
 const App = () => {
   return (
@@ -25,7 +26,8 @@ const App = () => {
       {/* <DrillingParent /> */}
       {/* <CallbackParent /> */}
       {/* <UpliftingParent /> */}
-      <UserLists/>
+      {/* <UserLists/> */}
+      <ControlledForms1/>
     </>
   );
 };
