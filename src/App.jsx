@@ -11,6 +11,7 @@ import CallbackParent from "./allTopics/05_callbacks/CallbackParent";
 import UpliftingParent from "./allTopics/06_StateUplifting/UpliftingParent";
 import UserLists from "./allTopics/07_Lists/UserLists";
 import ControlledForms1 from "./allTopics/08_ControlledForms/ControlledForms1";
+import ControlledForms2 from "./allTopics/08_ControlledForms/ControlledForms2";
 
 const App = () => {
   return (
@@ -27,7 +28,8 @@ const App = () => {
       {/* <CallbackParent /> */}
       {/* <UpliftingParent /> */}
       {/* <UserLists/> */}
-      <ControlledForms1/>
+      {/* <ControlledForms1/> */}
+      <ControlledForms2 />
     </>
   );
 };
