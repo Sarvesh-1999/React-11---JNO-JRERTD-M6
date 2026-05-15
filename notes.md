@@ -583,3 +583,667 @@ These tools allow a deeply nested component to "teleport" or grab data directly 
 
 - **React Context API:** A built-in React feature for sharing data across the app without passing props.
 - **State Management Libraries:** External tools like **Redux**, **Zustand**, or **Recoil** that act as a global database for your app's state.
+
+# **How to Send Data from Child to Parent in React**
+
+In React, we know that data naturally flows downwards (from Parent to Child) using **props**. Because of this "One-Way Data Binding" rule, there is no direct way to send props _upwards_.
+
+However, there is a very standard workaround: **You pass a function from the Parent to the Child as a prop.**
+
+Here is the exact process:
+
+1. The Parent creates a function that takes some data as an argument.
+2. The Parent passes that function down to the Child as a prop.
+3. The Child calls that function and passes its data into it.
+4. The Parent's function runs, and the Parent now has the data!
+
+---
+
+### **Step-by-Step Code Example**
+
+Let's say we have a Parent component that wants to know what the user typed into an input box located inside a Child component.
+
+#### **1. The Child Component**
+
+The Child receives the function via props (we'll call it `onSendData`). When the user types or clicks a button, the Child executes that function and puts its internal data inside the parentheses.
+
+```jsx
+import React, { useState } from "react";
+
+function ChildComponent({ onSendData }) {
+  const [childText, setChildText] = useState("");
+
+  const handleClick = () => {
+    // 3. The Child calls the Parent's function and passes the data!
+    onSendData(childText);
+  };
+
+  return (
+    <div style={{ border: "2px solid blue", padding: "10px" }}>
+      <h4>Child Component</h4>
+      <input
+        type="text"
+        placeholder="Type a message..."
+        value={childText}
+        onChange={(e) => setChildText(e.target.value)}
+      />
+      <button onClick={handleClick}>Send to Parent</button>
+    </div>
+  );
+}
+
+export default ChildComponent;
+```
+
+#### **2. The Parent Component**
+
+The Parent holds the state to store the incoming data. It defines the function and passes it down.
+
+```jsx
+import React, { useState } from "react";
+import ChildComponent from "./ChildComponent";
+
+function ParentComponent() {
+  // State to hold the data coming from the child
+  const [messageFromChild, setMessageFromChild] = useState("No message yet.");
+
+  // 1. The Parent creates a function to handle the incoming data
+  const handleDataFromChild = (data) => {
+    setMessageFromChild(data);
+  };
+
+  return (
+    <div style={{ border: "2px solid green", padding: "20px" }}>
+      <h2>Parent Component</h2>
+      <p>
+        <strong>Message received:</strong> {messageFromChild}
+      </p>
+
+      <hr />
+
+      {/* 2. The Parent passes the function to the Child as a prop */}
+      <ChildComponent onSendData={handleDataFromChild} />
+    </div>
+  );
+}
+
+export default ParentComponent;
+```
+
+# **What is "Lifting State Up"?**
+
+Since we just talked about sending data from a Child to a Parent, you actually already know half of how this works!
+
+**Lifting State Up** is a core React pattern used when two or more sibling components need to share the exact same data. Because React enforces "One-Way Data Binding" (data only flows down), **siblings cannot talk to each other directly.**
+
+To solve this, you take the state out of the children and **"lift" it up to their closest common Parent component**. The Parent then becomes the single source of truth and passes that data down to the children via props.
+
+---
+
+### **The Problem: Siblings Can't Communicate**
+
+Imagine you have a `CheckoutPage` (Parent) that renders two components:
+
+1. `<PromoCodeInput/>` (Sibling A)
+2. `<OrderSummary/>` (Sibling B)
+
+If the user types a discount code into Sibling A, Sibling B needs to know about it to update the final price. But Sibling A cannot send props sideways to Sibling B.
+
+### **The Solution: Lift the State to the Parent**
+
+#### **The Analogy**
+
+Imagine two siblings in the backseat of a car who aren't allowed to talk to each other. If Sibling A wants to share a snack with Sibling B, they have to hand it up to the Parent driving the car, and the Parent reaches back to hand it to Sibling B.
+
+#### **Step-by-Step Code Example**
+
+Let's build a simple app where typing in one component (Child A) instantly updates the text in another component (Child B).
+
+**1. Sibling A: The Input Component**
+This component doesn't own the state. It just receives the current text and a function to update it from the Parent.
+
+```jsx
+import React from "react";
+
+// Receives 'text' and 'onTextChange' as props from the Parent
+function TextInput({ text, onTextChange }) {
+  return (
+    <div style={{ padding: "10px", border: "2px solid blue" }}>
+      <h3>Input (Sibling A)</h3>
+      <input
+        type="text"
+        value={text}
+        // When typing, it calls the Parent's function
+        onChange={(e) => onTextChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
+export default TextInput;
+```
+
+**2. Sibling B: The Display Component**
+This component also doesn't own the state. It just receives the text from the Parent and displays it.
+
+```jsx
+import React from "react";
+
+// Receives 'text' as a prop from the Parent
+function TextDisplay({ text }) {
+  return (
+    <div
+      style={{ padding: "10px", border: "2px solid red", marginTop: "10px" }}
+    >
+      <h3>Display (Sibling B)</h3>
+      <p>
+        The user is typing: <strong>{text}</strong>
+      </p>
+    </div>
+  );
+}
+
+export default TextDisplay;
+```
+
+**3. The Parent: The Common Ancestor**
+This is where the magic happens. The Parent holds the state and distributes it. It passes the updater function to Sibling A, and the actual data to Sibling B.
+
+```jsx
+import React, { useState } from "react";
+import TextInput from "./TextInput";
+import TextDisplay from "./TextDisplay";
+
+function ParentApp() {
+  // 1. We "lifted" the state up to the Parent
+  const [sharedText, setSharedText] = useState("");
+
+  // 2. A function to update the state
+  const handleTextChange = (newText) => {
+    setSharedText(newText);
+  };
+
+  return (
+    <div style={{ padding: "20px", border: "2px solid green" }}>
+      <h2>Parent Component (Single Source of Truth)</h2>
+
+      {/* 3. Pass the data AND the updater function to Sibling A */}
+      <TextInput text={sharedText} onTextChange={handleTextChange} />
+
+      {/* 4. Pass JUST the data to Sibling B */}
+      <TextDisplay text={sharedText} />
+    </div>
+  );
+}
+
+export default ParentApp;
+```
+
+### **Summary of the Flow:**
+
+1. User types "Hello" into `<TextInput/>` (Sibling A).
+2. `<TextInput/>` fires its `onChange` event and calls `onTextChange("Hello")`.
+3. That triggers the Parent's `handleTextChange` function.
+4. The Parent updates its `sharedText` state using `setSharedText`.
+5. Because the Parent's state changed, **React re-renders the Parent and all of its children.**
+6. `<TextDisplay/>` (Sibling B) receives the new "Hello" prop and updates the screen.
+
+# **How Lists Work in React**
+
+In React, there are no special built-in HTML tags for looping (like you might find in other frameworks). Because React is heavily based on plain JavaScript, you use standard JavaScript array methods to render lists—most commonly, the **`.map()`** function.
+
+The goal is simple: You take an array of data, and you transform it into an array of JSX elements.
+
+---
+
+### **1. The Basics: Using `.map()**`
+
+The `.map()` function goes through an array item by item, applies a function to each one, and returns a completely new array. In React, we use it to turn data strings or objects into HTML tags.
+
+**Example: A Simple List of Strings**
+Notice how we wrap the `fruits.map()` inside curly braces `{}`. This is required because we are writing JavaScript logic inside JSX.
+
+```jsx
+import React from "react";
+
+function FruitList() {
+  const fruits = ["Apple", "Banana", "Cherry", "Date"];
+
+  return (
+    <div>
+      <h2>My Favorite Fruits</h2>
+      <ul>
+        {/* We loop through the array and return an <li> for each fruit */}
+        {fruits.map((fruit, index) => (
+          <li key={index}>{fruit}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default FruitList;
+```
+
+---
+
+### **2. The Golden Rule of Lists: The `key` Prop**
+
+If you look closely at the code above, you will see `key={index}` attached to the `<li>` tag.
+
+Whenever you render a list in React, **every item must have a unique `key` prop.** If you forget to add it, the list will still render, but React will complain in your browser console with a red warning.
+
+#### **Why does React need keys?**
+
+React uses the Virtual DOM to efficiently update the screen. If a list changes (e.g., you delete an item, add a new one, or reorder them), React needs to know _exactly_ which item was changed so it doesn't have to re-draw the entire list from scratch. The `key` acts as a unique ID tag for that specific element.
+
+#### **What should you use as a key?**
+
+1. **Unique IDs (Best Practice):** Always use a unique identifier from your database if you have one (e.g., `user.id` or `post.uuid`).
+2. **Array Index (Last Resort):** You can use the loop index (0, 1, 2...) as a key, but **only** if the list is static (it will never be reordered, filtered, or changed). If the list order changes, using indexes can cause bizarre bugs where the wrong data is shown on the screen.
+
+---
+
+### **3. A Real-World Example: Array of Objects**
+
+In actual applications, you will rarely map over simple strings. You will usually fetch an array of objects from a database and map them into custom child components.
+
+Here is how you render a list of users, passing the data down as props.
+
+```jsx
+import React from "react";
+
+// 1. The Child Component (represents a single item)
+function UserCard({ name, role }) {
+  return (
+    <div style={{ border: "1px solid gray", margin: "10px", padding: "10px" }}>
+      <h3>{name}</h3>
+      <p>Role: {role}</p>
+    </div>
+  );
+}
+
+// 2. The Parent Component (contains the list)
+function UserDirectory() {
+  // A mock array of data (usually this comes from an API)
+  const users = [
+    { id: 101, name: "Alice", role: "Admin" },
+    { id: 102, name: "Bob", role: "Editor" },
+    { id: 103, name: "Charlie", role: "Viewer" },
+  ];
+
+  return (
+    <div>
+      <h2>Company Directory</h2>
+
+      {/* Map through the 'users' array */}
+      {users.map((user) => (
+        <UserCard
+          key={user.id} // The unique key (React needs this!)
+          name={user.name} // Passing data as props
+          role={user.role} // Passing data as props
+        />
+      ))}
+    </div>
+  );
+}
+
+export default UserDirectory;
+```
+
+### **Summary of Steps for Rendering Lists:**
+
+1. Get your array of data.
+2. Open a set of curly braces `{}` inside your JSX.
+3. Call `.map()` on your array.
+4. Return the HTML element or React Component you want to display.
+5. Attach a unique `key` prop to the outermost element you are returning.
+
+# **What is Reconciliation?**
+
+In React, **Reconciliation** is the behind-the-scenes algorithm that React uses to decide how to update the user interface efficiently.
+
+To understand reconciliation, you first have to understand the problem it solves: **Updating the Real DOM is slow.** If you have a massive webpage and change one small text block, tearing down the entire HTML structure and rebuilding it from scratch would cause the webpage to freeze or lag.
+
+Reconciliation is React’s smart "diffing" (finding the differences) process that ensures only the exact elements that changed are updated on the screen.
+
+---
+
+### **The Analogy: The Architect's Blueprints**
+
+Imagine you own a house (the **Real DOM**), and you want to add a new window to the living room.
+
+1. **The Bad Way (Vanilla JS):** You demolish the entire house and rebuild it from the ground up, just to include the new window.
+2. **The React Way (Reconciliation):** You have a blueprint of your house (the **Virtual DOM**). You draw a _second_ blueprint showing the house with the new window. You lay the two blueprints on top of each other, compare them, and realize: _"Ah, the only difference is this one wall."_ You go to the physical house and cut a hole for just that one window. The rest of the house is untouched.
+
+---
+
+### **How the Reconciliation Process Works (Step-by-Step)**
+
+When a component's State or Props change, React triggers the reconciliation process. It happens in three main phases:
+
+#### **1. The Render Phase**
+
+When state changes, React calls your component function again. It looks at the new data and generates a brand-new **Virtual DOM** tree. (The Virtual DOM is just a lightweight JavaScript object that describes what the UI _should_ look like).
+
+#### **2. The Diffing Phase**
+
+React now has two Virtual DOM trees:
+
+- The **Old Tree** (what is currently on the screen).
+- The **New Tree** (what needs to be on the screen).
+
+React runs a highly optimized algorithm to compare these two trees and figure out exactly what changed.
+
+#### **3. The Commit Phase**
+
+Once React has a strict list of the differences (e.g., "Change the text of this `<p>` tag" or "Add a new `<li>` to this list"), it reaches out to the **Real DOM** and applies _only_ those specific updates.
+
+---
+
+### **React's "Diffing" Rules**
+
+Comparing two massive trees node-by-node is mathematically very slow. To make reconciliation blazingly fast, React uses a few strict heuristics (shortcut rules):
+
+- **Rule 1: Different Element Types = Rebuild**
+  If React sees that an element tag has changed (for example, a `<div>` changed into an `<span>`, or an `<Article>` component changed into a `<Header>` component), React won't even bother looking inside. It will immediately tear down the old element and its children, and build the new one from scratch.
+- **Rule 2: Same Element, Different Attributes = Update**
+  If the element type is the same (e.g., an `<img>` is still an `<img>`), React keeps the element on the screen and only updates the attributes that changed.
+  _(Example: If the `src` attribute changes, React just swaps the image file, but leaves the HTML tag in place)._
+- **Rule 3: The Magic of "Keys" in Lists**
+  Remember when we discussed lists and the `key` prop? This is exactly where keys are used!
+  If you have a list of 100 items and you insert a new item at the very top, React might get confused and think it needs to rebuild all 100 items. By providing a unique `key` to each item, you tell React: _"Item 101 is new, but Items 1-100 are exactly the same."_ React uses those keys during the diffing phase to skip unnecessary work.
+
+# **What is a Controlled Form?**
+
+In traditional HTML, form elements (like `<input>`, `<textarea>`, and `<select>`) maintain their own internal memory. When you type into an HTML input, the browser updates the DOM itself.
+
+In React, we want our components to be the **"Single Source of Truth."**
+
+A **Controlled Form** is a pattern where React completely takes over the form. The input field's value is driven entirely by a React state variable (`useState`). The input cannot change unless the React state changes first.
+
+#### **The Puppeteer Analogy**
+
+Think of a controlled input like a marionette puppet. The input field is the puppet, and React State is the puppeteer. The input cannot move or display new text on its own; it only updates when the puppeteer (the state) pulls the strings.
+
+---
+
+### **How to Build a Controlled Input (Step-by-Step)**
+
+There are three mandatory pieces to make an input "controlled":
+
+1. **State:** You need a `useState` variable to hold the input's current value.
+2. **The `value` Prop:** You must bind the input's `value` attribute directly to that state variable.
+3. **The `onChange` Event:** You must provide a function that updates the state every time the user presses a key.
+
+#### **Example: A Single Controlled Input**
+
+```jsx
+import React, { useState } from "react";
+
+function NameForm() {
+  // 1. Create the state
+  const [name, setName] = useState("");
+
+  const handleChange = (event) => {
+    // event.target.value contains the exact letter(s) the user just typed
+    // 3. Update the state with the new keystroke
+    setName(event.target.value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault(); // Stops the page from refreshing
+    alert(`Submitting Name: ${name}`);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Enter your name:
+        <input
+          type="text"
+          value={name} // 2. Bind the value to state
+          onChange={handleChange} // 3. Fire the updater function on every keystroke
+        />
+      </label>
+      <button type="submit">Submit</button>
+
+      {/* Because it's controlled, we can instantly display the value! */}
+      <p>Live preview: {name}</p>
+    </form>
+  );
+}
+
+export default NameForm;
+```
+
+---
+
+### **Handling Multiple Inputs (Best Practice)**
+
+If you have a form with 10 fields (Name, Email, Password, Age, etc.), creating 10 separate `useState` variables gets very messy.
+
+Instead, the standard practice is to use **a single state object** to hold all the form data. You give each `<input>` a `name` attribute, and use that `name` to dynamically update the correct property in your state object.
+
+#### **Example: A Multi-Field Controlled Form**
+
+```jsx
+import React, { useState } from "react";
+
+function SignupForm() {
+  // 1. One state object for the whole form
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+
+  // 2. A single, reusable change handler
+  const handleChange = (event) => {
+    // Extract the 'name' and 'value' from the input that triggered the event
+    const { name, value } = event.target;
+
+    // Update the state object dynamically
+    setFormData((prevData) => ({
+      ...prevData, // Copy all the existing data
+      [name]: value, // Update ONLY the field that the user is currently typing in
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    console.log("Data ready to send to server:", formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        name="username" // Matches the state key!
+        value={formData.username}
+        onChange={handleChange}
+        placeholder="Username"
+      />
+      <br />
+      <input
+        type="email"
+        name="email" // Matches the state key!
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="Email"
+      />
+      <br />
+      <input
+        type="password"
+        name="password" // Matches the state key!
+        value={formData.password}
+        onChange={handleChange}
+        placeholder="Password"
+      />
+      <br />
+      <button type="submit">Register</button>
+    </form>
+  );
+}
+
+export default SignupForm;
+```
+
+### **Why go through this effort?**
+
+At first glance, it seems like a lot of extra typing just to get a form working. However, controlling your forms unlocks powerful features instantly:
+
+- **Instant Validation:** You can prevent a user from typing numbers into a name field _as they type_, or instantly highlight a password that is too short.
+- **Conditional UI:** You can easily disable the "Submit" button until all required fields are filled out.
+- **Ready-to-Send Data:** When the user clicks submit, you don't have to scrape the DOM to find what they typed. All their data is already perfectly packaged in your `formData` state object, ready to be sent to your database.
+
+---
+
+Now that you have state and forms down, the next major hurdle is understanding how React interacts with the outside world (like fetching data from a real database). Would you like to explore how to handle "side effects" using the **`useEffect` Hook**?
+
+# **CSS in React**
+
+### **1. Inline CSS**
+
+Inline styling in React is similar to inline styling in standard HTML, but with one massive difference: **you do not pass a string; you pass a JavaScript object.**
+
+Because you are writing JavaScript, you cannot use standard CSS kebab-case (like `background-color`). You must write the properties in **camelCase** (like `backgroundColor`).
+
+#### **How it works:**
+
+You define a JavaScript object containing your styles and pass it directly to the `style` prop of your JSX element.
+
+#### **Code Example:**
+
+```jsx
+import React, { useState } from "react";
+
+function AlertBox() {
+  const [isHovered, setIsHovered] = useState(false);
+
+  // 1. Define the styles as a JavaScript object
+  const boxStyle = {
+    backgroundColor: "darkblue",
+    color: "white",
+    padding: "20px",
+    borderRadius: "8px",
+    textAlign: "center",
+    // You can dynamically change styles using JavaScript logic!
+    border: isHovered ? "3px solid yellow" : "3px solid transparent",
+  };
+
+  return (
+    <div
+      style={boxStyle} // 2. Attach the object to the style prop
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <h3>Inline Styled Box</h3>
+      <p>My styles live inside the component.</p>
+    </div>
+  );
+}
+
+export default AlertBox;
+```
+
+- **When to use it:** When you have a style that changes dynamically based on state (like a progress bar's width changing from `10%` to `50%`).
+- **When to avoid it:** For general styling. It makes your component files massive, and you **cannot** use CSS features like `:hover`, `::before`, or `@media` queries inside an inline style object.
+
+---
+
+### **2. Global CSS (Standard CSS)**
+
+This is the traditional way you are probably used to from plain HTML/JS web development. You write your CSS in a `.css` file and import it directly into your React component.
+
+#### **How it works:**
+
+Once you import a standard CSS file into _any_ component, React injects those styles into the `<head>` of the actual webpage. **This means the styles become global.**
+
+#### **Code Example:**
+
+**`styles.css`**
+
+```css
+/* These styles will apply everywhere in the app */
+.global-card {
+  background-color: #f4f4f4;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+.title {
+  color: red;
+}
+```
+
+**`UserProfile.jsx`**
+
+```jsx
+import React from "react";
+import "./styles.css"; // 1. Import the file directly
+
+function UserProfile() {
+  return (
+    // 2. Use standard class names (but write 'className' instead of 'class'!)
+    <div className="global-card">
+      <h2 className="title">User Profile</h2>
+    </div>
+  );
+}
+
+export default UserProfile;
+```
+
+- **When to use it:** For absolute global rules like `body` background colors, typography resets, or setting up global CSS variables (`:root`).
+- **When to avoid it:** For styling specific components. Because everything is global, if you have a `.title` class in your `UserProfile.jsx` and you later create a completely different `.title` class for your `SettingsPage.jsx`, **they will collide** and overwrite each other.
+
+---
+
+### **3. CSS Modules (Scoped CSS)**
+
+CSS Modules were created specifically to solve the "global collision" problem mentioned above. They allow you to write normal CSS, but React automatically makes the class names **unique to that specific component**.
+
+#### **How it works:**
+
+You must name your file with the `.module.css` extension (e.g., `Button.module.css`). When you import it, React takes your class names and generates a random, unique hash for them in the browser (e.g., your `.card` class becomes `.card_1x8g9`).
+
+#### **Code Example:**
+
+**`ProductCard.module.css`**
+
+```css
+/* This looks like normal CSS */
+.card {
+  background-color: white;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.title {
+  color: green;
+}
+```
+
+**`ProductCard.jsx`**
+
+```jsx
+import React from "react";
+// 1. Import the styles as a JavaScript object (usually named 'styles')
+import styles from "./ProductCard.module.css";
+
+function ProductCard() {
+  return (
+    // 2. Access the class names using dot notation
+    <div className={styles.card}>
+      <h2 className={styles.title}>Laptop</h2>
+    </div>
+  );
+}
+
+export default ProductCard;
+```
+
+- **When to use it:** This is the **best practice** for traditional CSS in React. It guarantees that the styles you write for your `ProductCard` will never accidentally mess up your `UserProfile` component, even if they both use a class named `.title`.
+- **When to avoid it:** If you dislike having to switch back and forth between two separate files (a `.jsx` file and a `.module.css` file) while building a single component.

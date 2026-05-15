@@ -12,6 +12,8 @@ import UpliftingParent from "./allTopics/06_StateUplifting/UpliftingParent";
 import UserLists from "./allTopics/07_Lists/UserLists";
 import ControlledForms1 from "./allTopics/08_ControlledForms/ControlledForms1";
 import ControlledForms2 from "./allTopics/08_ControlledForms/ControlledForms2";
+import Card from "./allTopics/09_ReactCss/Card";
+import InlineCss from "./allTopics/09_ReactCss/InlineCss";
 
 const App = () => {
   return (
@@ -29,7 +31,9 @@ const App = () => {
       {/* <UpliftingParent /> */}
       {/* <UserLists/> */}
       {/* <ControlledForms1/> */}
-      <ControlledForms2 />
+      {/* <ControlledForms2 /> */}
+      {/* <InlineCss /> */}
+      <Card />
     </>
   );
 };
