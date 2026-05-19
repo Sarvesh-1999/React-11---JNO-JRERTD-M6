@@ -14,6 +14,7 @@ import ControlledForms1 from "./allTopics/08_ControlledForms/ControlledForms1";
 import ControlledForms2 from "./allTopics/08_ControlledForms/ControlledForms2";
 import Card from "./allTopics/09_ReactCss/Card";
 import InlineCss from "./allTopics/09_ReactCss/InlineCss";
+import TodoWrapper from "./allTopics/10_todoApp/TodoWrapper";
 
 const App = () => {
   return (
@@ -33,7 +34,8 @@ const App = () => {
       {/* <ControlledForms1/> */}
       {/* <ControlledForms2 /> */}
       {/* <InlineCss /> */}
-      <Card />
+      {/* <Card /> */}
+      <TodoWrapper />
     </>
   );
 };
