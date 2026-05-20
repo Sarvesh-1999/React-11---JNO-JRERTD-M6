@@ -1,6 +1,6 @@
 import style from "./CreateTodo.module.css";
 
-const CreateTodo = ({ todo, setTodo, handleCreateTodo }) => {
+const CreateTodo = ({ todo, setTodo, handleCreateTodo, editTodoId }) => {
   return (
     <form className={style.todoForm} onSubmit={handleCreateTodo}>
       <input
@@ -11,7 +11,7 @@ const CreateTodo = ({ todo, setTodo, handleCreateTodo }) => {
         value={todo}
         onChange={(e) => setTodo(e.target.value)}
       />
-      <button>Add</button>
+      <button>{editTodoId ? "Update" : "Create"}</button>
     </form>
   );
 };
