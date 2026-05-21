@@ -1,3 +1,4 @@
+import { useState } from "react";
 import ClassBased from "./allTopics/01_Types-of-components/ClassBased";
 import FunctionBased from "./allTopics/01_Types-of-components/FunctionBased";
 import CounterFBC from "./allTopics/02_States/CounterFBC";
@@ -15,8 +16,13 @@ import ControlledForms2 from "./allTopics/08_ControlledForms/ControlledForms2";
 import Card from "./allTopics/09_ReactCss/Card";
 import InlineCss from "./allTopics/09_ReactCss/InlineCss";
 import TodoWrapper from "./allTopics/10_todoApp/TodoWrapper";
+import UncontrolledForms from "./allTopics/11_UncontrolledForms/UncontrolledForms";
+import LifeCycleInCBC from "./allTopics/12_LifeCycle/LifeCycleInCBC";
 
 const App = () => {
+  const [toggle, setToggle] = useState(false);
+  const handleToggle = () => setToggle((prev) => !prev);
+
   return (
     <>
       {/* <FunctionBased /> */}
@@ -35,7 +41,11 @@ const App = () => {
       {/* <ControlledForms2 /> */}
       {/* <InlineCss /> */}
       {/* <Card /> */}
-      <TodoWrapper />
+      {/* <TodoWrapper /> */}
+      {/* <UncontrolledForms /> */}
+
+      <button onClick={handleToggle}>toggle me</button>
+      {toggle && <LifeCycleInCBC />}
     </>
   );
 };
