@@ -1,31 +1,103 @@
 .todoForm {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
-  padding: 1rem 0;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-radius: 60px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  max-width: 700px;
+  margin: 0 auto;
 }
+
+.todoForm:focus-within {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .todoForm > input {
-  padding: 0.75rem 1.5rem;
-  min-width: 30vw;
+  flex: 1;
+  padding: 0.9rem 1.5rem;
+  font-size: 1rem;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 50px;
   outline: none;
-  border: none;
-  box-shadow: 0 2px 5px black;
-  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  color: #1e293b;
+  font-weight: 500;
 }
+
+.todoForm > input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.todoForm > input:focus {
+  background: white;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+}
+
 .todoForm > button {
-  padding: 0.75rem 2rem;
-  border-radius: 4px;
+  padding: 0.9rem 2rem;
   border: none;
+  border-radius: 50px;
+  background: linear-gradient(95deg, #8b5cf6 0%, #a78bfa 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
-  background-color: violet;
-  box-shadow: 0 2px 5px black;
-  font-weight: 600;
-  transition: 0.2s;
-  color: whitesmoke;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.5px;
+  font-family: inherit;
 }
+
 .todoForm > button:hover {
-  background-color: #b967b9;
+  background: linear-gradient(95deg, #7c3aed 0%, #8b5cf6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
+
 .todoForm > button:active {
-  transform: scale(1.02);
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 640px) {
+  .todoForm {
+    padding: 1rem;
+    gap: 0.75rem;
+    border-radius: 40px;
+  }
+  
+  .todoForm > input {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.9rem;
+  }
+  
+  .todoForm > button {
+    padding: 0.7rem 1.4rem;
+    font-size: 0.85rem;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.todoForm {
+  animation: slideIn 0.4s ease-out;
 }

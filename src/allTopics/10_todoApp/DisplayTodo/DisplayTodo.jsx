@@ -4,18 +4,18 @@ const DisplayTodo = ({ allTodos, handleDeleteTodo, handleEditTodo }) => {
   console.log(allTodos); // [{},{},{}....]
 
   return (
-    <div>
+    <div className={style.todosContainer}>
       {allTodos.length === 0 ? (
         <p>No Todos Available</p>
       ) : (
-        <section>
+        <section className={style.todosWrapper}>
           {allTodos.map((todo) => {
             let { id, text } = todo;
             return (
-              <div key={id}>
+              <div key={id} className={style.todo}>
                 <h3>{text}</h3>
-                <button onClick={() => handleEditTodo(id)}>Edit</button>
-                <button onClick={() => handleDeleteTodo(id)}>Delete</button>
+                <button className={style.editBtn} onClick={() => handleEditTodo(id)}>Edit</button>
+                <button className={style.deleteBtn} onClick={() => handleDeleteTodo(id)}>Delete</button>
               </div>
             );
             s;
