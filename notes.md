@@ -1247,3 +1247,455 @@ export default ProductCard;
 
 - **When to use it:** This is the **best practice** for traditional CSS in React. It guarantees that the styles you write for your `ProductCard` will never accidentally mess up your `UserProfile` component, even if they both use a class named `.title`.
 - **When to avoid it:** If you dislike having to switch back and forth between two separate files (a `.jsx` file and a `.module.css` file) while building a single component.
+
+---
+
+# **10 — Todo App (Putting It All Together)**
+
+The Todo App in `src/allTopics/10_todoApp/` is a **mini full-stack UI pattern** built only with React. It combines almost everything you have learned so far: **state**, **lifting state up**, **controlled forms**, **lists with keys**, **props**, **callbacks from child to parent**, and **CSS Modules**.
+
+Think of this folder as your first "real" project structure—not one giant file, but multiple focused components that work together.
+
+---
+
+### **Folder Structure**
+
+```text
+10_todoApp/
+├── TodoWrapper.jsx          ← Parent: owns ALL state & logic
+├── TodoWrapper.module.css
+├── CreateTodo/
+│   ├── CreateTodo.jsx       ← Child: input form only
+│   └── CreateTodo.module.css
+└── DisplayTodo/
+    ├── DisplayTodo.jsx      ← Child: renders the list
+    └── DisplayTodo.module.css
+```
+
+| File | Responsibility |
+|------|----------------|
+| **`TodoWrapper.jsx`** | Single source of truth: `todo`, `allTodos`, `editTodoId`. Handles create, update, delete, edit, and `localStorage`. |
+| **`CreateTodo.jsx`** | Controlled input + submit button. Does not own state—it receives `todo`, `setTodo`, and `handleCreateTodo` from the parent. |
+| **`DisplayTodo.jsx`** | Maps over `allTodos` and shows Edit/Delete buttons. Calls parent handlers via props. |
+
+---
+
+### **The Architecture: Lifting State Up in Practice**
+
+`CreateTodo` and `DisplayTodo` are **siblings**. They cannot share state directly. So `TodoWrapper` holds everything:
+
+```jsx
+const [todo, setTodo] = useState("");                    // current input text
+const [allTodos, setAllTodos] = useState(() => { ... }); // full list
+const [editTodoId, setEditTodoId] = useState(null);      // null = create mode, id = edit mode
+```
+
+**Data flow:**
+
+1. **Down:** Parent passes `todo`, `setTodo`, `allTodos`, and handler functions as props.
+2. **Up:** Children never mutate the list themselves—they call `handleCreateTodo`, `handleDeleteTodo`, or `handleEditTodo` defined in the parent.
+
+This is the same "car backseat" pattern from **Lifting State Up**, applied to a production-style layout.
+
+---
+
+### **Todo Object Shape**
+
+Each todo is a plain JavaScript object stored in an array:
+
+```js
+{ id: 1735123456789, text: "Learn React" }
+```
+
+- **`id`:** Created with `Date.now()` so each item has a unique, stable `key` for `.map()`.
+- **`text`:** The trimmed string from the controlled input (`todo.trim()`).
+
+---
+
+### **Controlled Form in `CreateTodo`**
+
+The input is fully controlled by parent state:
+
+```jsx
+<input
+  type="text"
+  value={todo}
+  onChange={(e) => setTodo(e.target.value)}
+/>
+<button>{editTodoId ? "Update" : "Create"}</button>
+```
+
+The button label switches based on **`editTodoId`**: if you are editing an existing todo, the same form acts as an **update** form instead of **create**.
+
+---
+
+### **Create vs Update (Edit Mode)**
+
+`handleCreateTodo` in `TodoWrapper` does two jobs depending on `editTodoId`:
+
+**A. Update path** (when `editTodoId` is set):
+
+1. Map over `allTodos` and replace the matching `id` with `{ ...ele, text: todo.trim() }`.
+2. Save to `localStorage`, clear input, set `editTodoId` back to `null`.
+
+**B. Create path** (when `editTodoId` is `null`):
+
+1. Build `newTodo = { id: Date.now(), text: todo.trim() }`.
+2. Read existing array from `localStorage`, `push` the new item, save, update `allTodos`.
+3. Clear input with `setTodo("")`.
+
+Using one submit handler for both operations is common in small apps—it avoids duplicating two separate forms.
+
+---
+
+### **Delete and Edit**
+
+**Delete** — immutable filter pattern:
+
+```jsx
+const handleDeleteTodo = (id) => {
+  let filteredTodos = [...allTodos].filter((ele) => ele.id !== id);
+  setAllTodos(filteredTodos);
+  localStorage.setItem("todos", JSON.stringify(filteredTodos));
+};
+```
+
+**Edit** — "hydrate" the form from the list:
+
+```jsx
+const handleEditTodo = (id) => {
+  const todoToBeEdited = allTodos.find((ele) => ele.id === id);
+  setTodo(todoToBeEdited.text);  // fill the input
+  setEditTodoId(id);             // switch submit to "Update"
+};
+```
+
+---
+
+### **Rendering the List (`DisplayTodo`)**
+
+```jsx
+{allTodos.map((todo) => {
+  let { id, text } = todo;
+  return (
+    <div key={id} className={style.todo}>
+      <h3>{text}</h3>
+      <button onClick={() => handleEditTodo(id)}>Edit</button>
+      <button onClick={() => handleDeleteTodo(id)}>Delete</button>
+    </div>
+  );
+})}
+```
+
+- **`key={id}`** — required for reconciliation when items are added, removed, or reordered.
+- **Empty state** — if `allTodos.length === 0`, show `"No Todos Available"`.
+
+---
+
+### **Persisting Data with `localStorage`**
+
+The browser's **`localStorage`** API stores strings that survive page refreshes.
+
+**Load on first render (lazy initializer):**
+
+```jsx
+const [allTodos, setAllTodos] = useState(() => {
+  let todos = localStorage.getItem("todos");
+  return todos ? JSON.parse(todos) : [];
+});
+```
+
+Using a **function** inside `useState` means this read runs **once** on mount, not on every re-render.
+
+**Save after every change:**
+
+```jsx
+localStorage.setItem("todos", JSON.stringify(updatedTodos));
+```
+
+| Method | Purpose |
+|--------|---------|
+| `localStorage.getItem("todos")` | Read saved JSON string (or `null` if empty). |
+| `JSON.parse(...)` | Turn string back into a JavaScript array. |
+| `JSON.stringify(...)` | Turn array into a string before saving. |
+| `localStorage.setItem("todos", ...)` | Write to disk in the browser. |
+
+**Important:** React state (`allTodos`) is what drives the UI **right now**. `localStorage` is the **backup** so data survives a refresh. Always update **both** when the list changes, or the UI and storage will get out of sync.
+
+---
+
+### **CSS Modules in This App**
+
+Each component imports its own scoped file:
+
+```jsx
+import style from "./TodoWrapper.module.css";
+// ...
+<main className={style.wrapper}>
+```
+
+`TodoWrapper.module.css` handles the page layout (`wrapper`, `heading`). `CreateTodo` and `DisplayTodo` have their own `.module.css` files for the form and list cards—no class name collisions with the rest of the app.
+
+---
+
+### **Summary: What the Todo App Teaches**
+
+1. Split UI into **smart parent** + **dumb children**.
+2. One controlled input can serve **create** and **update** flows.
+3. Lists need **`.map()`**, **`key`**, and immutable updates (`filter`, `map`).
+4. **`localStorage`** + `JSON.parse` / `JSON.stringify` for persistence.
+5. **CSS Modules** keep styles local per component.
+
+---
+
+# **11 — Uncontrolled Forms**
+
+In `src/allTopics/11_UncontrolledForms/UncontrolledForms.jsx`, you learn the **opposite** pattern from Topic 08 (Controlled Forms).
+
+| | **Controlled** | **Uncontrolled** |
+|---|----------------|------------------|
+| **Who owns the value?** | React state (`useState`) | The DOM / browser |
+| **How you read input** | `formData.email` from state | `ref.current.value` on submit |
+| **Required on `<input>`** | `value` + `onChange` | `ref` (no `value` prop) |
+| **Live preview while typing** | Easy (`{name}` in JSX) | Harder—you must read the DOM |
+| **Best for** | Validation, dynamic UI, most React forms | Simple forms, integrating non-React libraries, file inputs |
+
+---
+
+### **The Analogy**
+
+- **Controlled:** You type into a notebook **you** hold; React reads the notebook on every keystroke.
+- **Uncontrolled:** The user writes on a sticky note attached to the DOM; you only **pick up the note** when they click Submit (`useRef`).
+
+---
+
+### **The `useRef` Hook**
+
+`useRef` creates a **mutable box** that persists across re-renders but **does not** trigger a re-render when its contents change.
+
+```jsx
+const emailRef = useRef(null);
+```
+
+Attach it to an input:
+
+```jsx
+<input type="email" ref={emailRef} />
+```
+
+After the component mounts, `emailRef.current` points to the **actual DOM `<input>` element**. You can read:
+
+```jsx
+emailRef.current.value
+```
+
+---
+
+### **Full Flow in Your Workspace Code**
+
+```jsx
+import { useRef } from "react";
+
+const UncontrolledForms = () => {
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const newUser = {
+      email: emailRef.current.value,
+      password: passwordRef.current.value,
+    };
+
+    console.log(newUser);
+
+    // Clear the DOM inputs directly (no setState needed)
+    emailRef.current.value = "";
+    passwordRef.current.value = "";
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="email" ref={emailRef} />
+      <input type="password" ref={passwordRef} />
+      <button>Submit</button>
+    </form>
+  );
+};
+```
+
+**Step-by-step:**
+
+1. User types — browser updates the DOM; React state is untouched.
+2. User submits — `handleSubmit` runs.
+3. `e.preventDefault()` stops a full page reload.
+4. Read values from `emailRef.current.value` and `passwordRef.current.value`.
+5. Build `newUser` and log (or send to an API).
+6. Reset fields by assigning `""` to `.value` on the DOM nodes.
+
+---
+
+### **When to Choose Uncontrolled**
+
+- Very simple login/search forms where you only care about values **on submit**.
+- Integrating with third-party DOM plugins that expect to own the input.
+- Avoiding re-renders on every keystroke in huge forms (rare concern today).
+
+**Default in modern React:** prefer **controlled** forms unless you have a clear reason not to.
+
+---
+
+# **12 — Component Lifecycle**
+
+Lifecycle describes **what happens to a component from birth to death**: when it appears on screen, when it updates, and when it is removed.
+
+In `src/allTopics/12_LifeCycle/` you have two implementations of the same ideas:
+
+| File | Component type | API |
+|------|----------------|-----|
+| `LifeCycleInFBC.jsx` | Function-based | `useEffect` |
+| `LifeCycleInCBC.jsx` | Class-based | `componentDidMount`, `componentDidUpdate`, `componentWillUnmount` |
+
+---
+
+### **The Three Lifecycle Phases (Conceptual)**
+
+```text
+MOUNT   → Component is created and inserted into the DOM (first appearance)
+UPDATE  → State or props changed; component re-renders
+UNMOUNT → Component is removed from the DOM (destroyed)
+```
+
+**Typical use cases:**
+
+- **Mount:** Fetch data, subscribe to WebSocket, start a timer, read `localStorage`.
+- **Update:** React to prop/state changes (sync document title, log analytics).
+- **Unmount:** Clean up timers, listeners, or subscriptions so you do not leak memory.
+
+---
+
+### **Function Components: `useEffect`**
+
+`useEffect` runs **after** React paints the UI. It replaces the old class lifecycle methods in function components.
+
+#### **1. Mount only — empty dependency array `[]`**
+
+Runs **once** after the first render (like `componentDidMount`):
+
+```jsx
+useEffect(() => {
+  console.log("Component Mounted");
+}, []);
+```
+
+Your `LifeCycleInFBC` uses this to log when the component first appears.
+
+---
+
+#### **2. Update — dependency array with values `[count]`**
+
+Runs after **every render where `count` changed** (like `componentDidUpdate`, but scoped):
+
+```jsx
+useEffect(() => {
+  if (initailRender) {
+    setInitialRender(false);
+    return;
+  }
+  console.log("Component Updated");
+}, [count]);
+```
+
+**Why the `initailRender` flag?**
+
+On the **first** render, `count` is already in the dependency array, so this effect would run immediately and log "Updated" even though nothing changed yet. The pattern:
+
+1. First run: `initailRender` is `true` → set it to `false` and `return` early (skip the log).
+2. Later runs: only when `count` actually changes → log `"Component Updated"`.
+
+This is a common teaching trick to **skip the first effect run** when you only want "updates," not "mount."
+
+---
+
+#### **3. Unmount — cleanup function**
+
+Return a function from `useEffect` to run cleanup when the component is removed (like `componentWillUnmount`):
+
+```jsx
+useEffect(() => {
+  const intervalId = setInterval(() => {
+    console.log("API CALLED");
+  }, 2000);
+
+  return () => {
+    clearInterval(intervalId);
+  };
+}, []);
+```
+
+Your class component does the same cleanup in `componentWillUnmount` with `clearInterval(this.intervalId)`.
+
+---
+
+### **Class Components: Lifecycle Methods**
+
+`LifeCycleInCBC.jsx` shows the classic API:
+
+| Method | When it runs |
+|--------|----------------|
+| **`constructor`** | Before first render; initialize `this.state`. |
+| **`render`** | Every time React needs to draw UI (logs `"I am render"`). |
+| **`componentDidMount`** | After first paint; start `setInterval` (simulated API every 2s). |
+| **`componentDidUpdate`** | After every re-render when state/props changed. |
+| **`componentWillUnmount`** | Right before removal; `clearInterval` cleanup. |
+
+```jsx
+componentDidMount() {
+  this.intervalId = setInterval(() => {
+    console.log("API CALLED");
+  }, 2000);
+}
+
+componentWillUnmount() {
+  clearInterval(this.intervalId);
+}
+```
+
+**Rule:** Anything you start in `componentDidMount` (timers, listeners) should be **stopped** in `componentWillUnmount`.
+
+---
+
+### **Seeing Unmount in `App.jsx`**
+
+Your `App.jsx` demonstrates unmounting with a toggle:
+
+```jsx
+const [toggle, setToggle] = useState(false);
+
+<button onClick={handleToggle}>toggle me</button>
+{toggle && <LifeCycleInCBC />}
+```
+
+When `toggle` becomes `false`, React **removes** `LifeCycleInCBC` from the tree → `componentWillUnmount` fires → interval is cleared. If you skip cleanup, the timer keeps running in the background even though the UI is gone (**memory leak**).
+
+---
+
+### **FBC vs CBC Lifecycle Mapping**
+
+| Phase | Class-based | Function-based (`useEffect`) |
+|-------|-------------|------------------------------|
+| Mount | `componentDidMount` | `useEffect(() => { ... }, [])` |
+| Update | `componentDidUpdate` | `useEffect(() => { ... }, [dep1, dep2])` |
+| Unmount | `componentWillUnmount` | `return () => { ... }` inside `useEffect` |
+
+Modern React codebases almost always use **function components + hooks**. Class lifecycle methods still appear in older codebases and interviews, so knowing both is valuable.
+
+---
+
+### **Summary**
+
+1. **Lifecycle** = mount, update, unmount.
+2. **`useEffect`** handles side effects in function components; dependencies control **when** it re-runs.
+3. **Cleanup** (return function from `useEffect` or `componentWillUnmount`) prevents leaked timers and listeners.
+4. **Simulated API polling** in `LifeCycleInCBC` with `setInterval` is a stand-in for real `fetch` calls you will wire up later.

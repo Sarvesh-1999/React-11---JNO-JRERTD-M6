@@ -18,6 +18,7 @@ import InlineCss from "./allTopics/09_ReactCss/InlineCss";
 import TodoWrapper from "./allTopics/10_todoApp/TodoWrapper";
 import UncontrolledForms from "./allTopics/11_UncontrolledForms/UncontrolledForms";
 import LifeCycleInCBC from "./allTopics/12_LifeCycle/LifeCycleInCBC";
+import LifeCycleInFBC from "./allTopics/12_LifeCycle/LifeCycleInFBC";
 
 const App = () => {
   const [toggle, setToggle] = useState(false);
@@ -44,8 +45,10 @@ const App = () => {
       {/* <TodoWrapper /> */}
       {/* <UncontrolledForms /> */}
 
-      <button onClick={handleToggle}>toggle me</button>
-      {toggle && <LifeCycleInCBC />}
+      {/* <button onClick={handleToggle}>toggle me</button>
+      {toggle && <LifeCycleInCBC />} */}
+
+      <LifeCycleInFBC />
     </>
   );
 };
