@@ -1,27 +1,34 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const LifeCycleInFBC = () => {
   const [count, setCount] = useState(0);
-  const [initailRender, setInitialRender] = useState(true);
+  const initialRender = useRef(true); // {current : true}
+  const handleCount = () => setCount((prev) => prev + 1);
 
   useEffect(() => {
     console.log("Component Mounted");
+    const id = setInterval(() => console.log("API Called"), 2000);
+
+    return () => {
+      // clean-up function
+      clearInterval(id)
+      console.log("Component Unmounted");
+    };
   }, []);
 
   useEffect(() => {
-    if (initailRender) {
-      setInitialRender(false);
+    if (initialRender.current) {
+      initialRender.current = false;
       return;
     }
     console.log("Component Updated");
   }, [count]);
 
   return (
-    <>
-      <h1>Learn LifeCycle in Function Based</h1>
-      <h2>Counter : {count}</h2>
-      <button onClick={() => setCount((prev) => prev + 1)}>increment</button>
-    </>
+    <div>
+      <h1>Learn LifeCycle in Function {count}</h1>
+      <button onClick={handleCount}>update</button>
+    </div>
   );
 };
 

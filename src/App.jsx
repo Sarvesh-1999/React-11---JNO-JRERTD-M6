@@ -19,6 +19,8 @@ import TodoWrapper from "./allTopics/10_todoApp/TodoWrapper";
 import UncontrolledForms from "./allTopics/11_UncontrolledForms/UncontrolledForms";
 import LifeCycleInCBC from "./allTopics/12_LifeCycle/LifeCycleInCBC";
 import LifeCycleInFBC from "./allTopics/12_LifeCycle/LifeCycleInFBC";
+import Users from "./allTopics/12_LifeCycle/Users";
+import Products from "./allTopics/13_Fetch/Products";
 
 const App = () => {
   const [toggle, setToggle] = useState(false);
@@ -48,7 +50,13 @@ const App = () => {
       {/* <button onClick={handleToggle}>toggle me</button>
       {toggle && <LifeCycleInCBC />} */}
 
-      <LifeCycleInFBC />
+      {/* <LifeCycleInFBC /> */}
+
+      {/* <button onClick={handleToggle}>toggle me</button>
+      {toggle && <Users />} */}
+
+       <button onClick={handleToggle}>toggle me</button>
+      {toggle && <Products />}
     </>
   );
 };
