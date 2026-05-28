@@ -26,6 +26,8 @@ import Hero from "./allTopics/16_Context/Hero";
 import ContextProvider from "./allTopics/16_Context/ContextExample";
 import CounterProvider from "./allTopics/16_Context/CounterProvider";
 import Counter from "./allTopics/16_Context/Counter";
+import Task from "./allTopics/17_Task/Task";
+import { UserContextProvider } from "./allTopics/17_Task/context/UserContextProvider";
 
 const App = () => {
   const [toggle, setToggle] = useState(false);
@@ -69,9 +71,13 @@ const App = () => {
         <Hero />
       </ContextProvider> */}
 
-      <CounterProvider>
+      {/* <CounterProvider>
         <Counter />
-      </CounterProvider>
+      </CounterProvider> */}
+
+      <UserContextProvider>
+        <Task />
+      </UserContextProvider>
     </>
   );
 };
