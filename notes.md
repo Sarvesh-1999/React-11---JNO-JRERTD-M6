@@ -1699,3 +1699,226 @@ Modern React codebases almost always use **function components + hooks**. Class 
 2. **`useEffect`** handles side effects in function components; dependencies control **when** it re-runs.
 3. **Cleanup** (return function from `useEffect` or `componentWillUnmount`) prevents leaked timers and listeners.
 4. **Simulated API polling** in `LifeCycleInCBC` with `setInterval` is a stand-in for real `fetch` calls you will wire up later.
+
+---
+
+# **13 — Fetch API**
+
+In `src/allTopics/13_Fetch/Products.jsx`, data is fetched from `https://dummyjson.com/products` and rendered as product cards.
+
+### **Code Flow**
+
+1. `items` state starts as an empty array.
+2. `useEffect(..., [])` runs once on mount.
+3. `fetch` is called with `AbortController` signal for cancellation safety.
+4. Response is converted with `resp.json()`.
+5. `setItems(data.products)` stores products in state.
+6. UI conditionally renders:
+   - empty list -> "No products available"
+   - non-empty list -> map over products and show `thumbnail`, `title`, `description`.
+
+### **Core Pattern**
+
+```jsx
+const [items, setItems] = useState([]);
+
+useEffect(() => {
+  const controller = new AbortController();
+
+  async function getProducts() {
+    try {
+      const resp = await fetch("https://dummyjson.com/products", {
+        signal: controller.signal,
+      });
+      const data = await resp.json();
+      setItems(data.products);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  getProducts();
+  return () => controller.abort();
+}, []);
+```
+
+### **Why `AbortController` Matters**
+
+If the component unmounts before fetch completes, `controller.abort()` prevents state updates on an unmounted component and avoids noisy warnings/race conditions.
+
+---
+
+
+# **15 — useReducer**
+
+Implemented in:
+
+- `src/allTopics/15_Reducer/Reducer.jsx`
+- `src/allTopics/15_Reducer/counterState.js`
+
+This topic shows reducer-based state management for a counter.
+
+### **Reducer Setup**
+
+```jsx
+export let initialState = 0;
+
+export const reducerFunc = (prev, action) => {
+  switch (action) {
+    case "incre":
+      return prev + 1;
+    case "decre":
+      return prev > 0 ? prev - 1 : 0;
+    case "reset":
+      return 0;
+  }
+};
+```
+
+### **Using `useReducer` in Component**
+
+```jsx
+const [count, dispatch] = useReducer(reducerFunc, initialState);
+
+<button onClick={() => dispatch("incre")}>increment</button>
+<button onClick={() => dispatch("decre")}>decrement</button>
+<button onClick={() => dispatch("reset")}>reset</button>
+```
+
+### **Key Understanding**
+
+- `dispatch(action)` sends an action.
+- reducer decides next state from `(previousState, action)`.
+- `useReducer` is useful when state transitions are explicit and grow more complex.
+
+---
+
+# **16 — Context API**
+
+Implemented in:
+
+- `src/allTopics/16_Context/ContextExample.jsx`
+- `src/allTopics/16_Context/Hero.jsx`
+- `src/allTopics/16_Context/CounterProvider.jsx`
+- `src/allTopics/16_Context/Counter.jsx`
+
+This topic demonstrates both:
+
+1. simple string context sharing
+2. object-based context sharing with state + actions
+
+### **Simple Context Example**
+
+```jsx
+export const MyContext = createContext();
+
+const ContextProvider = (props) => {
+  let str = "Hii!! Im coming from Context";
+  return (
+    <MyContext.Provider value={str}>
+      {props.children}
+    </MyContext.Provider>
+  );
+};
+```
+
+Consumer (`Hero.jsx`):
+
+```jsx
+let data = useContext(MyContext);
+console.log(data);
+```
+
+### **Counter Context Example**
+
+Provider (`CounterProvider.jsx`):
+
+```jsx
+export const CounterContext = createContext();
+
+const CounterProvider = ({ children }) => {
+  const [count, setCount] = useState(0);
+  const increment = () => setCount((prev) => prev + 1);
+  const decrement = () => setCount((prev) => (prev > 0 ? prev - 1 : 0));
+  const reset = () => setCount(0);
+
+  return (
+    <CounterContext.Provider value={{ count, increment, decrement, reset }}>
+      {children}
+    </CounterContext.Provider>
+  );
+};
+```
+
+Consumer (`Counter.jsx`):
+
+```jsx
+let { count, increment, decrement, reset } = useContext(CounterContext);
+```
+
+### **When to Use Context**
+
+Use Context to avoid prop drilling when the same data is needed in multiple nested components (auth user, theme, language, cart, etc.).
+
+---
+
+# **17 — Task (Router + Context + localStorage)**
+
+Implemented in:
+
+- `src/allTopics/17_Task/Task.jsx`
+- `src/allTopics/17_Task/context/UserContextProvider.jsx`
+- `src/allTopics/17_Task/pages/Login.jsx`
+- `src/allTopics/17_Task/pages/Home.jsx`
+- `src/allTopics/17_Task/components/Navbar.jsx`
+
+This mini-task combines routing, login form state, global user context, and persistence with localStorage.
+
+### **Routing (`Task.jsx`)**
+
+```jsx
+<BrowserRouter>
+  <Routes>
+    <Route path="/" element={<Login />} />
+    <Route path="/home" element={<Home />} />
+  </Routes>
+</BrowserRouter>
+```
+
+### **Global User Store (`UserContextProvider.jsx`)**
+
+```jsx
+export const userContext = createContext();
+
+const [user, setUser] = useState(() => {
+  const savedUser = localStorage.getItem("user");
+  return savedUser ? JSON.parse(savedUser) : null;
+});
+```
+
+Provider exposes `{ user, setUser }` to all child components.
+
+### **Login Page Logic (`Login.jsx`)**
+
+- Controlled form with `formData` state (`name`, `email`, `password`)
+- On submit:
+  - `e.preventDefault()`
+  - build user object (`name`, `email`)
+  - update context via `setUser(data)`
+  - persist to localStorage
+  - redirect with `navigate("/home")`
+
+### **Navbar + Home**
+
+- `Navbar` reads `user` from context and shows email when logged in.
+- `Home` renders `Navbar` and welcome text.
+- Logout button UI is present, but logout logic is not implemented yet.
+
+### **Practical Outcome**
+
+This pattern is a base for authentication flow:
+
+1. login form captures user
+2. user stored globally in context
+3. user survives page reload via localStorage
+4. protected pages can consume user context
