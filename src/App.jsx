@@ -28,6 +28,9 @@ import CounterProvider from "./allTopics/16_Context/CounterProvider";
 import Counter from "./allTopics/16_Context/Counter";
 import Task from "./allTopics/17_Task/Task";
 import { UserContextProvider } from "./allTopics/17_Task/context/UserContextProvider";
+import Routing1 from "./allTopics/18_Routing/Routing1";
+import Routing2 from "./allTopics/18_Routing/Routing2";
+import ProductsPage from "./allTopics/19_CustomHook/Products"
 
 const App = () => {
   const [toggle, setToggle] = useState(false);
@@ -75,9 +78,15 @@ const App = () => {
         <Counter />
       </CounterProvider> */}
 
-      <UserContextProvider>
+      {/* <UserContextProvider>
         <Task />
-      </UserContextProvider>
+      </UserContextProvider> */}
+
+      {/* <Routing1 /> */}
+
+      {/* <Routing2 /> */}
+
+      <ProductsPage />
     </>
   );
 };

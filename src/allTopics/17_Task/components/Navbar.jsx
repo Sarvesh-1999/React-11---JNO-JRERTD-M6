@@ -1,9 +1,19 @@
 import { useContext } from "react";
 import { userContext } from "../context/UserContextProvider";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
-  const { user } = useContext(userContext);
-  console.log(user);
+  const { user, setUser } = useContext(userContext);
+
+  const navigate = useNavigate();
+
+  const logout = () => {
+    if (confirm("Are you sure ?")) {
+      localStorage.removeItem("user");
+      setUser(null);
+      navigate("/");
+    }
+  };
 
   return (
     <header
@@ -20,7 +30,9 @@ const Navbar = () => {
         {user && (
           <>
             <span>{user.email}</span>
-            <button>Logout</button>
+            <button onClick={logout}>
+              Logout
+            </button>
           </>
         )}
       </nav>
